@@ -1,237 +1,29 @@
 ### A Pluto.jl notebook ###
-# v0.19.9
+# v0.19.26
 
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ f8f70047-543e-4ee9-a9f2-bb5b5d7bb691
+# ╔═╡ fd47f9cd-2522-4c1d-90ba-1fce74f60398
 begin
-    using PlutoUI
-    using PlutoTeachingTools
+	using PlutoUI
+	using PlutoTeachingTools
+	using BenchmarkTools
 end
 
-# ╔═╡ 7805f29e-fdda-4d59-a5ab-a56bb1e7aece
-using BenchmarkTools
-
-# ╔═╡ ba372f70-9704-429a-859d-64b7a132a6d0
-ChooseDisplayMode()
-
-# ╔═╡ d0394d67-f73e-4cde-b3f0-c62da781c1cb
-TableOfContents()
-
-# ╔═╡ dc09ff3a-e8e9-11ed-02be-591ffc3def78
-html"""
-	<h1 style="text-align:left">
-		Julia programming for ML
-	</h1>
-	<div style="text-align:left">
-		<p style="font-weight:bold; font-size: 35px; font-variant: small-caps; margin: 0px">
-			Feedback: Week 1
-		</p>
-		<p style="font-size: 20px;">
-			TU Berlin, Summer Semester 2023<br>
-		</p>
-	</div>
-"""
-
-# ╔═╡ 239603a3-aeb1-4141-aab3-c1a521145827
-md"# Feedback from you
-1) *I would have liked the feedback in notebooks to be anonymous*
-    * there is an anonymous feedback option on ISIS!
-1) *How do I hand in the homework?*
-    * Upload the `.jl`-file of the notebook on ISIS
-1) *I would have liked more information about parallelization, CUDA support, ML libraries, building Deep Learning architectures*
-    * This is coming up in week 4
-1) *How do I import all notebooks to Pluto?*
-    * Clone the repository (demo in lecture)
-1) *I would have liked more theoretical insight into standardization*
-    * We can't cover theory in this lecture, but I will try to add more visualization to future notebooks
+# ╔═╡ 9adf1600-0110-11ee-260b-c5f6ed0ad662
+md"# *This is a lecture 1 workalong notebook!*
 "
 
-# ╔═╡ e3f1ba6b-9b3f-4f06-bc08-a9454627edaf
-md"# Questions from you"
-
-# ╔═╡ b8483c44-61d5-4a11-81fd-4419187d210c
-warning_box(md"All of this is very advanced and therefore optional content.")
-
-# ╔═╡ 11df4df2-1b15-4c39-b4ad-a65afbf8c93b
-md" ## Difference between map and broadcast
-### Size mismatch
-Based on the input dimensions, `map` and `broadcast` (`.`) act very differently:
+# ╔═╡ 4c966d0d-7069-4c76-bf58-776ec24f5dd3
+md"### Import the relevant packages for this lecture. 
+- Julia Basics-?
+- Benchmark Tools?
 "
 
-# ╔═╡ 0ca559d2-6575-4110-91df-530162ae6264
-map(+, [1, 2, 3], [10, 20, 30, 40])
-
-# ╔═╡ 4a4c0e1d-6154-4523-bfd4-6859ac723d8a
-broadcast(+, [1, 2, 3], [10, 20, 30, 40]) # errors!
-
-# ╔═╡ f88aaeea-4d75-4181-ad9c-afb6046deb3d
-[1, 2, 3] .+ [10, 20, 30, 40] # same as `broadcast`
-
-# ╔═╡ f7976448-8a43-419b-902f-ab1b117246bb
-md"### Array dimensions & transpose
-Today we will learn about vectors, matrices and transposing. 
-
-`map` and `broadcast` act very differently when adding column and row vectors:"
-
-# ╔═╡ b48ecd48-83d8-4609-bbdb-ad9e92001254
-map(+, [1, 2, 3], [4, 5, 6]')
-
-# ╔═╡ 7ce6c6b5-5236-4124-b515-69c176a1f99c
-broadcast(+, [1, 2, 3], [4, 5, 6]')
-
-# ╔═╡ 19ce9120-53ab-4bc6-b48b-7b14785f2bc7
-[1, 2, 3] .+ [4, 5, 6]' # same as broadcast
-
-# ╔═╡ 716d04a9-d8ed-45a9-9335-9565fc0fab90
-md"### Generators
-A list comprehension that is not collected (without square brackets `[...]`) is called a generator:
-"
-
-# ╔═╡ 22428074-972d-402f-a7f5-ea1b46b02272
-my_comprehension = [i^2 for i in 1:10000]
-
-# ╔═╡ 7a38fa4d-0142-4ce7-9ce3-008b8cb212a7
-my_generator = (i^2 for i in 1:10000)
-
-# ╔═╡ 92c05272-4811-4adb-b73d-1ef601fc00c2
-typeof(my_comprehension)
-
-# ╔═╡ e59e5245-d107-4eff-a13f-5d1e8d015c16
-typeof(my_generator)
-
-# ╔═╡ aa59ef74-d816-46f8-8337-b0bc580606c2
-md"Generators don't allocate:"
-
-# ╔═╡ 2e347ac9-8fd0-4d98-b5a5-42b650024275
-sizeof(my_comprehension) # 1000 Int64 => 64000 bit = 8000 bytes
-
-# ╔═╡ a059a5b2-9cbc-4e62-9ccd-be278aeb8470
-sizeof(my_generator) # Function + 2 Int64 of range => 128 bit => 16 bytes
-
-# ╔═╡ 03eec63f-b180-4822-aca1-16a36b5f8884
-md"For generators, there is a large difference in performance between `map` and `broadcast`:
-* `broadcast` first has to call collect all entries in a generator
-* `map` has a specialized method for generators
-
-On fully allocated arrays, there will be no difference in performance.
-"
-
-# ╔═╡ 51e194c3-0e88-4f72-bd44-60fd6529553e
-@benchmark map(sqrt, my_generator)
-
-# ╔═╡ 6ba6fa26-ad81-4798-b422-145763fc2720
-@benchmark sqrt.(my_generator)
-
-# ╔═╡ 0b3c2b66-4c12-4fed-af7d-9351ab87b03b
-md"## Difference between map and comprehensions
-### Filtering
-Comprehensions allow additional filtering, `map` doesn't:"
-
-# ╔═╡ 58fce315-293f-46e4-8acc-1c89eb25f40d
-[x for x in 1:10 if iseven(x)]
-
-# ╔═╡ baf0d6d7-1f82-4253-8fb2-7677c47f0c78
-md"### Return type
-List comprehensions always return an array, even when the input was e.g. a tuple:
-"
-
-# ╔═╡ a3875468-cb88-4527-84ae-5a04ca91f14b
-map(x -> x^2, (1, 2, 3))  # returns Tuple{Int64, Int64, Int64}
-
-# ╔═╡ 532d291e-0bc5-46a6-9415-c98d8bb6d208
-[x^2 for x in (1, 2, 3)]  # returns Vector{Int64}
-
-# ╔═╡ c19d69fc-168a-46dc-ad23-9a83622372cf
-md"""## Difference between `print` and `@info`
-* `print` writes to an output stream, defaulting to `stdout` (standard output, typically your active terminal)
-* `@info` is a [logging function](https://docs.julialang.org/en/v1/stdlib/Logging/). There are several others: `@warn`, `@debug`, ...
-
-Logging can have a couple of advantages over printing:
-* you see the line it came from
-* automatically labels arguments
-* can be filtered, disabled
-* don't interfere with other IO
-* `print` output can be scrambled when using parallelized code
-"""
-
-# ╔═╡ 57fd7f6f-e695-4d3c-a739-64ecd1d90d77
-print("This is short for...")
-
-# ╔═╡ 645e58e3-613d-4a0b-b0cd-87bd65fc153b
-print(stdout, "...this")
-
-# ╔═╡ fc4855ed-d4b4-4d4f-9c92-350c3dc80428
-md"# Homework feedback"
-
-# ╔═╡ ff3340a7-03fa-48b6-8980-9eb4c9b74a30
-md"## Please enter your name
-Don't leave this unmodified. Your name isn't Mara Mustermann!"
-
-# ╔═╡ 1e9a2cee-b038-4bbb-9718-a22ef956e81a
-student = (
-    name="Mara Mustermann",
-    email="m.mustermann@campus.tu-berlin.de", # TU Berlin email address
-    id=456123, # Matrikelnummer
-)
-
-# ╔═╡ f9b8b173-4f48-4605-8c6b-e522c63fef40
-md"## Please replace `missing` with your code
-Don't call your variable `missing`!
-
-```julia
-function my_sum(xs)
-	missing = 0
-	for i in xs
-		missing += i
-	end
-    return missing
-end
-```
-
-`missing` represents missing values and is of type `Missing`:
-"
-
-# ╔═╡ 3777af6e-7dfd-42be-b605-905faef1c027
-typeof(missing)
-
-# ╔═╡ 85eeb7de-2aa5-4797-83de-8a2256faa1b8
-md"## Broadcasting isn't always necessary
-For example, the multiplication of a vector by a scalar is mathematically well defined:"
-
-# ╔═╡ f7724f86-dcd3-4f41-b21c-d38c23e8c49d
-[1, 2, 3] .* 2  # broadcasting not required
-
-# ╔═╡ b0f3c638-aa92-4abf-8c18-a6fd6816afd8
-[1, 2, 3] * 2
-
-# ╔═╡ 0de85d85-962e-4b4b-8569-b68bfb8c0e0d
-md"Addition and subtraction of two vectors of the same length is also well defined:"
-
-# ╔═╡ fd30652e-f50d-4801-8c37-7ef0d564bed6
-[1, 2, 3] + [2, 2, 3]
-
-# ╔═╡ 37dd57ac-b750-497b-b018-5dc8e4d489c9
-[1, 2, 3] - [2, 2, 3]
-
-# ╔═╡ a69cb5a7-5ac4-4de7-ba1b-f0a05b592b01
-md"""## Testing for edge cases
-Some people wrote tests for several edge-cases in the inputs, for example
-```julia
-n = length(xs)
-n == 0 && error("Empty input array")
-```
-You did really well!
-
-Julia comes with several functions that start with "`is`", e.g. `iseven`, `isodd`, `isempty`, `isnothing` that can help you write concise tests:
-```julia
-isempty(xs) && error("Empty input array")
-```
-"""
-
-# ╔═╡ 433c8a4c-c272-4952-8e54-8ac08c5abf2f
-isempty([])
+# ╔═╡ e8c2f69b-2a9d-44a3-bfbb-f151d8f10029
+md"""- *C*
+                   blabla"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -335,9 +127,9 @@ version = "0.9.4"
 
 [[deps.IOCapture]]
 deps = ["Logging", "Random"]
-git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+git-tree-sha1 = "d75853a0bdbfb1ac815478bacd89cd27b550ace6"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
-version = "0.2.2"
+version = "0.2.3"
 
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
@@ -455,10 +247,10 @@ uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 version = "1.6.0"
 
 [[deps.Parsers]]
-deps = ["Dates", "SnoopPrecompile"]
-git-tree-sha1 = "478ac6c952fddd4399e71d4779797c538d0ff2bf"
+deps = ["Dates", "PrecompileTools", "UUIDs"]
+git-tree-sha1 = "a5aef8d4a6e8d81f171b2bd4be5265b01384c74c"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.5.8"
+version = "2.5.10"
 
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
@@ -489,11 +281,17 @@ git-tree-sha1 = "b478a748be27bd2f2c73a7690da219d0844db305"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 version = "0.7.51"
 
+[[deps.PrecompileTools]]
+deps = ["Preferences"]
+git-tree-sha1 = "259e206946c293698122f63e2b513a7c99a244e8"
+uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
+version = "1.1.1"
+
 [[deps.Preferences]]
 deps = ["TOML"]
-git-tree-sha1 = "47e5f437cc0e7ef2ce8406ce1e7e24d44915f88d"
+git-tree-sha1 = "7eb1686b4f04b82f96ed7a4ea5890a4f0c7a09f1"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
-version = "1.3.0"
+version = "1.4.0"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -534,12 +332,6 @@ version = "0.7.0"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
-
-[[deps.SnoopPrecompile]]
-deps = ["Preferences"]
-git-tree-sha1 = "e760a70afdcd461cf01a575947738d359234665c"
-uuid = "66db9d55-30c0-4569-8b51-7e840670fc0c"
-version = "1.0.3"
 
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
@@ -611,53 +403,9 @@ version = "17.4.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═f8f70047-543e-4ee9-a9f2-bb5b5d7bb691
-# ╟─ba372f70-9704-429a-859d-64b7a132a6d0
-# ╟─d0394d67-f73e-4cde-b3f0-c62da781c1cb
-# ╟─dc09ff3a-e8e9-11ed-02be-591ffc3def78
-# ╟─239603a3-aeb1-4141-aab3-c1a521145827
-# ╟─e3f1ba6b-9b3f-4f06-bc08-a9454627edaf
-# ╟─b8483c44-61d5-4a11-81fd-4419187d210c
-# ╟─11df4df2-1b15-4c39-b4ad-a65afbf8c93b
-# ╠═0ca559d2-6575-4110-91df-530162ae6264
-# ╠═4a4c0e1d-6154-4523-bfd4-6859ac723d8a
-# ╠═f88aaeea-4d75-4181-ad9c-afb6046deb3d
-# ╟─f7976448-8a43-419b-902f-ab1b117246bb
-# ╠═b48ecd48-83d8-4609-bbdb-ad9e92001254
-# ╠═7ce6c6b5-5236-4124-b515-69c176a1f99c
-# ╠═19ce9120-53ab-4bc6-b48b-7b14785f2bc7
-# ╟─716d04a9-d8ed-45a9-9335-9565fc0fab90
-# ╠═22428074-972d-402f-a7f5-ea1b46b02272
-# ╠═7a38fa4d-0142-4ce7-9ce3-008b8cb212a7
-# ╠═92c05272-4811-4adb-b73d-1ef601fc00c2
-# ╠═e59e5245-d107-4eff-a13f-5d1e8d015c16
-# ╟─aa59ef74-d816-46f8-8337-b0bc580606c2
-# ╠═2e347ac9-8fd0-4d98-b5a5-42b650024275
-# ╠═a059a5b2-9cbc-4e62-9ccd-be278aeb8470
-# ╟─03eec63f-b180-4822-aca1-16a36b5f8884
-# ╠═7805f29e-fdda-4d59-a5ab-a56bb1e7aece
-# ╠═51e194c3-0e88-4f72-bd44-60fd6529553e
-# ╠═6ba6fa26-ad81-4798-b422-145763fc2720
-# ╟─0b3c2b66-4c12-4fed-af7d-9351ab87b03b
-# ╠═58fce315-293f-46e4-8acc-1c89eb25f40d
-# ╟─baf0d6d7-1f82-4253-8fb2-7677c47f0c78
-# ╠═a3875468-cb88-4527-84ae-5a04ca91f14b
-# ╠═532d291e-0bc5-46a6-9415-c98d8bb6d208
-# ╟─c19d69fc-168a-46dc-ad23-9a83622372cf
-# ╠═57fd7f6f-e695-4d3c-a739-64ecd1d90d77
-# ╠═645e58e3-613d-4a0b-b0cd-87bd65fc153b
-# ╟─fc4855ed-d4b4-4d4f-9c92-350c3dc80428
-# ╟─ff3340a7-03fa-48b6-8980-9eb4c9b74a30
-# ╠═1e9a2cee-b038-4bbb-9718-a22ef956e81a
-# ╟─f9b8b173-4f48-4605-8c6b-e522c63fef40
-# ╠═3777af6e-7dfd-42be-b605-905faef1c027
-# ╟─85eeb7de-2aa5-4797-83de-8a2256faa1b8
-# ╠═f7724f86-dcd3-4f41-b21c-d38c23e8c49d
-# ╠═b0f3c638-aa92-4abf-8c18-a6fd6816afd8
-# ╟─0de85d85-962e-4b4b-8569-b68bfb8c0e0d
-# ╠═fd30652e-f50d-4801-8c37-7ef0d564bed6
-# ╠═37dd57ac-b750-497b-b018-5dc8e4d489c9
-# ╟─a69cb5a7-5ac4-4de7-ba1b-f0a05b592b01
-# ╠═433c8a4c-c272-4952-8e54-8ac08c5abf2f
+# ╟─9adf1600-0110-11ee-260b-c5f6ed0ad662
+# ╟─4c966d0d-7069-4c76-bf58-776ec24f5dd3
+# ╠═fd47f9cd-2522-4c1d-90ba-1fce74f60398
+# ╠═e8c2f69b-2a9d-44a3-bfbb-f151d8f10029
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
